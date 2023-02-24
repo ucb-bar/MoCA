@@ -43,12 +43,17 @@ Major hardware microarchitecture include:
 
 * Thresholding Module: prevent accelerator from further generating memory requests when the Access Counter value exceeds ``threshold``.
 
+MoCA hardware engines are implemented as lightweight finite-state machines and counters without incurring significant overhead.
 Two key parameters, ``window`` and ``threshold`` are configured by MoCA runtime system.
 
 
 
-Major Components
+
+MoCA Runtime
 ----------------
+
+MoCA runtime dynamically detects system-level interference and ssets limits on the accelerator's memory access rates to resolve contention if necessary.
+
 
 This subsection is aimed towards those who wish to start hacking on Gemmini's RTL.
 Here, we briefly describe Gemmini's main hardware components, and how they fit together.
