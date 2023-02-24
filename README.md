@@ -1,154 +1,26 @@
-<p align="center">
-  <img width="1000" src="./img/full-logo.svg">
-</p>
 
-Gemmini
+MoCA: Memory-Centric, Adaptive Execution for Multi-Tenant Deep Neural Networks
 ====================================
 
-The Gemmini project is developing a full-system, full-stack DNN hardware exploration and evaluation platform.
-Gemmini enables architects to make useful insights into how different components of the system and software stack (outside of just the accelerator itself) interact to affect overall DNN performance.
+The MoCA system is a memory-centric, adaptive system that supports efficient multi-tenancy execution for DNN accelerators.
+MOCA aims to adaptively manage the system-level shared-resource contention for co-located applications by dynamically partitioning both the compute and memory resources without incurring high overhead.
 
+This repository contains the HPCA MoCA artifact. Please refer to the appendix of the paper to run the artifacts. 
+The top level FireSim environment can be obtained in the [archived repository](https://doi.org/10.5281/zenodo.7456139).
+(MoCA hardware [archived repository](https://doi.org/10.5281/zenodo.7456052), MoCA software [archived repository](https://doi.org/10.5281/zenodo.7456045))
+
+MoCA hardware is implemented as a part of [Gemmini](https://github.com/ucb-bar/gemmini)
 Gemmini is part of the [Chipyard](https://github.com/ucb-bar/chipyard) ecosystem, and was developed using the [Chisel](https://www.chisel-lang.org/) hardware description language.
 
 This document is intended to provide information for beginners wanting to try out Gemmini, as well as more advanced in-depth information for those who might want to start hacking on Gemmini's source code.
 
-![Gemmini's high-level architecture](./img/gemmini-system.png)
 
-Quick Start
-==========
-
-We provide here a quick guide to installing Gemmini's dependencies (Chipyard and Spike), building Gemmini hardware and software, and then running that software on our hardware simulators.
-
-Dependencies
----------
-
-Before beginning, install the [Chipyard dependencies](https://chipyard.readthedocs.io/en/latest/Chipyard-Basics/Initial-Repo-Setup.html#requirements) that are described here.
-
-Installing Chipyard and Spike
------------------------------
-
-Run these steps to install Chipyard and Spike (make sure to checkout the correct Chipyard and Spike commits as shown below):
-
-```shell
-git clone https://github.com/ucb-bar/chipyard.git
-cd chipyard
-git checkout ec1b075658fb92a624151536dd1de76bad94f51f
-./scripts/init-submodules-no-riscv-tools.sh
-./scripts/build-toolchains.sh esp-tools
-
-source env.sh
-
-cd generators/gemmini
-git fetch && git checkout dev && git pull origin dev
-git submodule update
-
-cd -
-cd toolchains/esp-tools/riscv-isa-sim/build
-git fetch && git checkout 090e82c473fd28b4eb2011ffcd771ead6076faab
-make && make install
-```
-
-Setting Up Gemmini
-------------------
-
-Run the steps below to set up Gemmini configuration files, symlinks, and subdirectories:
-
-```shell
-cd chipyard/generators/gemmini
-./scripts/setup-paths.sh
-```
-
-Building Gemmini Software
--------------------------
-
-Run the steps below to compile Gemmini programs, including large DNN models like ResNet50, and small matrix-multiplication tests.
-
-```shell
-cd chipyard/generators/gemmini/software/gemmini-rocc-tests
-./build.sh
-```
-
-Afterwards, you'll find RISC-V binaries in `build/`, for "baremetal" environments, Linux environments, and "proxy-kernel" environments.
-
-Linux binaries are meant to be executed on SoCs that run Linux.
-These binaries are dynamically linked, and support all syscalls.
-Typically, our users run them on [FireSim](https://fires.im/) simulators.
-
-Baremetal binaries are meant to be run in an environment without any operating system available.
-They lack support for most syscalls, and do not support virtual memory either.
-Our users typically run them on cycle-accurate simulators like Verilator or VCS.
-
-"Proxy-kernel" binaries are meant to be run on a stripped down version of Linux, called the ["RISC-V Proxy Kernel."](https://github.com/riscv-software-src/riscv-pk)
-These binaries support virtual memory, and are typically run on cycle-accurate simulators like Verilator.
-
-**Warning:** Proxy-kernel binaries have limited heap space, so some Gemmini programs that work correctly in baremetal or Linux environments may fail on the proxy-kernel.
-
-Building Gemmini Hardware and Cycle-Accurate Simulators
------------------------------------------------
-
-Run the instructions below to build a cycle-accurate Gemmini simulator using Verilator.
-
-```shell
-cd chipyard/generators/gemmini
-./scripts/build-verilator.sh
-
-# Or, if you want a simulator that can generate waveforms, run this:
-# ./scripts/build-verilator.sh --debug
-```
-
-After running this, in addition to the cycle-accurate simulator, you will be able to find the Verilog description of your SoC in `generated-src/`.
-
-Building Gemmini Functional Simulators
----------------------------
-
-Run the instructions below to build a functional ISA simulator for Gemmini (called "Spike").
-
-```shell
-cd chipyard/generators/gemmini
-./scripts/build-spike.sh
-```
-
-Spike typically runs _much_ faster than cycle-accurate simulators like Verilator or VCS.
-However, Spike can only verify functional correctness; it cannot give accurate performance metrics or profiling information.
-
-Run Simulators
----------------
-
-Run the instructions below to run the Gemmini RISCV binaries that we built previously, using the simulators that we built above:
-
-```shell
-cd chipyard/generators/gemmini
-
-# Run a large DNN workload in the functional simulator
-./scripts/run-spike.sh resnet50
-
-# Run a smaller workload in baremetal mode, on a cycle-accurate simulator
-./scripts/run-verilator.sh template
-
-# Run a smaller workload with the proxy-kernel, on a cycle accurate simulator
-./scripts/run-verilator.sh --pk template
-
-# Or, if you want to generate waveforms in `waveforms/`:
-# ./scripts/run-verilator.sh --pk --debug template
-```
-
-Next steps
---------
-
-Check out [our IISWC 2021 tutorial](https://sites.google.com/berkeley.edu/gemminitutorialiiswc2021/) to learn how to:
-* build different types of diverse accelerators using Gemmini.
-* add custom datatypes to Gemmini.
-* write your own Gemmini programs.
-* profile your workloads using Gemmini's performance counters.
-
-Also, consider learning about [FireSim](fires.im), a platform for FPGA-accelerated cycle-accurate simulation.
-We use FireSim to run end-to-end DNN workloads that would take too long to run on Verilator/VCS.
-FireSim also allows users to check that their Gemmini hardware/software will work when running on a Linux environment.
-
-Or, continue reading the rest of this document for descriptions of Gemmini's architecture, ISA, and configuration parameters.
-
-Architecture
+MoCA Systems
 ================
+
+MOCA is a full stack system composed of 1) a lightweight hardware memory access monitoring and regulation engine, 2) an intelligent runtime system that manages the memory usage of each of the co-located applications dynamically, and 3) a priority- and memory-aware task scheduler that selects the workloads to execute concurrently based on its user-assigned priority, latency target, and memory resource usage.
+
+![Overview of MoCA system](./img/gemmini-system.png)
 
 Gemmini is implemented as a RoCC accelerator with non-standard RISC-V custom instructions.
 The Gemmini unit uses the RoCC port of a Rocket or BOOM _tile_, and by default connects to the memory system through the System Bus (i.e., directly to the L2 cache).
@@ -630,14 +502,14 @@ Gemmini also includes a CISC instruction for convolutions, implemented similarly
 Like `gemmini_loop_ws`, the inputs to a single `gemmini_loop_conv_ws` call must fit within half of Gemmini's private memory, to support double-buffering.
 If the programmer would like to perform larger convolutions, they must tile and wrap `gemmini_loop_conv_ws` within an outer-loop.
 
-# Citing Gemmini
-If Gemmini helps you in your academic research, you are encouraged to cite our paper. Here is an example bibtex:
+# Citing MoCA
+If MoCA helps you in your academic research, you are encouraged to cite our paper. Here is an example bibtex:
 ```
-@INPROCEEDINGS{gemmini-dac,
-  author={Genc, Hasan and Kim, Seah and Amid, Alon and Haj-Ali, Ameer and Iyer, Vighnesh and Prakash, Pranav and Zhao, Jerry and Grubb, Daniel and Liew, Harrison and Mao, Howard and Ou, Albert and Schmidt, Colin and Steffl, Samuel and Wright, John and Stoica, Ion and Ragan-Kelley, Jonathan and Asanovic, Krste and Nikolic, Borivoje and Shao, Yakun Sophia},
-  booktitle={Proceedings of the 58th Annual Design Automation Conference (DAC)}, 
-  title={Gemmini: Enabling Systematic Deep-Learning Architecture Evaluation via Full-Stack Integration}, 
-  year={2021},
+@INPROCEEDINGS{moca-hpca,
+  author={Kim, Seah and Genc, Hasan and Nikiforov, Vadim Vadimovich and Asanovic, Krste and Nikolic, Borivoje and Shao, Yakun Sophia},
+  booktitle={IEEE International Symposium on High Performance Computer Architecture (HPCA)}, 
+  title={MoCA: Memory-Centric, Adaptive Execution for Multi-Tenant Deep Neural Networks}, 
+  year={2023},
   volume={},
   number={},
   pages={}
@@ -647,4 +519,3 @@ If Gemmini helps you in your academic research, you are encouraged to cite our p
 # Acknowledgements
 
 - This project was, in part, funded by the U.S. Government under the DARPA RTML program (contract FA8650-20-2-7006). The views and conclusions contained in this document are those of the authors and should not be interpreted as representing the official policies, either expressed or implied, of the U.S. Government.
-- The Gemmini [logo](./img/full-logo.svg) was designed by Dima Nikiforov ([@CobbledSteel](https://github.com/CobbledSteel)).
