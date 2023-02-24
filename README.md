@@ -28,45 +28,24 @@ The Gemmini unit uses the RoCC port of a Rocket or BOOM _tile_, and by default c
 MoCA Hardware
 --------------------------
 
-MoCA hardware is implemented as a part of [Gemmini](https://github.com/ucb-bar/gemmini)
-Gemmini is part of the [Chipyard](https://github.com/ucb-bar/chipyard) ecosystem, and was developed using the [Chisel](https://www.chisel-lang.org/) hardware description language.
+MoCA hardware dynamically monitors the memory access rate of each accelerator tile and throttle its execution if the target access counts have been reached. 
+MoCA hardware builds on top of the decoupled access/execute DNN accelerators and controls the memory access without changing the compute engine.
 
 <img src="./img/moca-tile.png" width="50%" height="50%" />
 
+We implemented MoCA hardware on top of [Gemmini](https://github.com/ucb-bar/gemmini)
+Gemmini is part of the [Chipyard](https://github.com/ucb-bar/chipyard) ecosystem, and was developed using the [Chisel](https://www.chisel-lang.org/) hardware description language.
 
-Major parameters of interest include:
 
-* Systolic array dimensions (``tileRows``, ``tileColumns``, ``meshRows``, ``meshColumns``): The systolic array is composed of a 2-level hierarchy, in which each tile is fully combinational, while a mesh of tiles has pipeline registers between each tile.
+Major hardware microarchitecture include:
 
-![Gemmini's systolic two-tiered hierarchy](./img/gemmini-systolic-array.png)
+* Access Counter: track memory access counts during the monitoring time ``window``
 
-* Dataflow parameters (``dataflow``): Determine whether the systolic array in Gemmini is output-stationary or weight-stationary, or whether it supports both dataflows so that programmers may choose between them at runtime.
+* Thresholding Module: prevent accelerator from further generating memory requests when the Access Counter value exceeds ``threshold``.
 
-* Scratchpad and accumulator memory parameters (``sp_banks``, ``sp_capacity``, ``acc_capacity``): Determine the properties of the Gemmini scratchpad memory: overall capacity of the scratchpad or accumulators (in KiB), and the number of banks the scratchpad is divided into.
+Two key parameters, ``window`` and ``threshold`` are configured by MoCA runtime system.
 
-* Type parameters (``inputType``, ``outputType``, ``accType``):
-Determine the data-types flowing through different parts of a Gemmini accelerator.
-For example, ``inputType`` may be an 8-bit fixed-point number, while ``accType``, which determines the type of partial accumulations in a matrix multiplication, may be a 32-bit integer.
-``outputType`` only determines the type of the data passed between two processing elements (PEs); for example, an 8-bit multiplication may produce a 16-bit result which must be shared between PEs in a systolic array.
-    - Examples of possible datatypes are:
-        - `SInt(8.W)` for a signed 8-bit integer
-        - `UInt(32.W)` for an unsigned 32-bit integer
-        - `Float(8, 24)` for a single-precision IEEE floating point number
-    - If your datatype is a floating-point number, then you might also want to change the ``pe_latency`` parameter, which specifies how many shift registers to add inside the PEs.
-This might be necessary if your datatype cannot complete a multiply-accumulate operation within a single cycle.
 
-* Access-execute queue parameters (``ld_queue_length``, ``st_queue_length``, ``ex_queue_length``, ``rob_entries``): To implement access-execute decoupling, a Gemmini accelerator has a load instruction queue, a store instruction queue, and an execute instruction queue. The relative sizes of these queue determine the level of access-execute decoupling. Gemmini also implements a reorder buffer (ROB) - the number of entries in the ROB determines possible dependency management limitations.
-
-* DMA parameters (``dma_maxbytes``, ``dma_buswidth``, ``mem_pipeline``): Gemmini implements a DMA to move data from main memory to the Gemmini scratchpad, and from the Gemmini accumulators to main memory. The size of these DMA transactions is determined by the DMA parameters. These DMA parameters are tightly coupled with Rocket Chip SoC system parameters: in particular ``dma_buswidth`` is associated with the ``SystemBusKey`` ``beatBytes`` parameter, and ``dma_maxbytes`` is associated with ``cacheblockbytes`` Rocket Chip parameters.
-
-There are also optional features, which can be either enabled or left out of Gemmini at elaboration-time.
-For example:
-
-* Scaling during "move-in" operations (``mvin_scale_args``, ``mvin_scale_acc_args``):
-When data is being moved in from DRAM or main memory into Gemmini's local scratchpad memory, it can optionally be multiplied by a scaling factor.
-These parameters specify what the datatype of the scaling factor is, and how the scaling is actually done.
-If these are set to ``None``, then this optional feature will be disabled at elaboration time.
-If both the scratchpad inputs are accumulator inputs are to be scaled in the same say, then the ``mvin_scale_shared`` parameter can be set to ``true`` so that the multipliers and functional units are shared.
 
 Major Components
 ----------------
