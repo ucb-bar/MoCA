@@ -20,7 +20,7 @@ MoCA Systems
 
 MOCA is a full stack system composed of 1) a lightweight hardware memory access monitoring and regulation engine, 2) an intelligent runtime system that manages the memory usage of each of the co-located applications dynamically, and 3) a priority- and memory-aware task scheduler that selects the workloads to execute concurrently based on its user-assigned priority, latency target, and memory resource usage.
 
-![Overview of MoCA system](./img/gemmini-system.png)
+![Overview of MoCA system](./img/moca-system.png)
 
 Gemmini is implemented as a RoCC accelerator with non-standard RISC-V custom instructions.
 The Gemmini unit uses the RoCC port of a Rocket or BOOM _tile_, and by default connects to the memory system through the System Bus (i.e., directly to the L2 cache).
