@@ -9,8 +9,7 @@ This repository contains the HPCA MoCA artifact. Please refer to the appendix of
 The top level FireSim environment can be obtained in the [archived repository](https://doi.org/10.5281/zenodo.7456139).
 (MoCA hardware [archived repository](https://doi.org/10.5281/zenodo.7456052), MoCA software [archived repository](https://doi.org/10.5281/zenodo.7456045))
 
-MoCA hardware is implemented as a part of [Gemmini](https://github.com/ucb-bar/gemmini)
-Gemmini is part of the [Chipyard](https://github.com/ucb-bar/chipyard) ecosystem, and was developed using the [Chisel](https://www.chisel-lang.org/) hardware description language.
+
 
 This document is intended to provide information for beginners wanting to try out Gemmini, as well as more advanced in-depth information for those who might want to start hacking on Gemmini's source code.
 
@@ -25,19 +24,15 @@ MOCA is a full stack system composed of 1) a lightweight hardware memory access 
 Gemmini is implemented as a RoCC accelerator with non-standard RISC-V custom instructions.
 The Gemmini unit uses the RoCC port of a Rocket or BOOM _tile_, and by default connects to the memory system through the System Bus (i.e., directly to the L2 cache).
 
-At the heart of the accelerator lies a systolic array which performs matrix multiplications.
-By default, the matrix multiplication support both _output-stationary_ and _weight-stationary_ dataflows, which programmers can pick between at runtime.
-However, the dataflow can also be hardened at elaboration time.
 
-The systolic array's inputs and outputs are stored in an explicity managed scratchpad, made up of banked SRAMs.
-A DMA engine facilitates the transfer of data between main memory (which is visible to the host CPU) and the scratchpad.
-
-Because weight-stationary dataflows require an accumulator outside the systolic array, we add a final SRAM bank, equipped with adder units, which can be conceptually considered an extension of the scratchpad memory space. The systolic array can store results to any address in the accumulator, and can also read new inputs from any address in the accumulator. The DMA engine can also tranfer data directly between the accumulator and main memory, which is often necessary to load in biases.
-
-Gemmini also includes peripheral circuitry to optionally apply activation functions such as ReLU or ReLU6, scale results down by powers-of-2 to support quantized workloads, or to transpose matrices before feeding them into the systolic array to support the output-stationary dataflow.
-
-Generator Parameters
+MoCA Hardware
 --------------------------
+
+MoCA hardware is implemented as a part of [Gemmini](https://github.com/ucb-bar/gemmini)
+Gemmini is part of the [Chipyard](https://github.com/ucb-bar/chipyard) ecosystem, and was developed using the [Chisel](https://www.chisel-lang.org/) hardware description language.
+
+<img src="./img/moca-tile.png" width="50%" height="50%" />
+
 
 Major parameters of interest include:
 
