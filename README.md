@@ -54,10 +54,19 @@ MoCA Runtime
 
 MoCA runtime dynamically detects system-level interference and ssets limits on the accelerator's memory access rates to resolve contention if necessary.
 
+MoCA runtime consists of two parts:
+* Performance prediction of co-running layers based on available hardware resources
+* Contention detection and hardware resource repartition which is activated under contention detection. 
 
-This subsection is aimed towards those who wish to start hacking on Gemmini's RTL.
-Here, we briefly describe Gemmini's main hardware components, and how they fit together.
-If you have no interest in changing Gemmini's hardware (besides just changing configuration parameters), then feel free to skip this section.
+Contention is declared if the memory bandwidth requirement of current co-running layers is greater than the available bandwidth in the system.
+In that case, MoCA runtime reconfigure MoCA hardware to either limit the memory access rate by updating the parameters, ``window`` and ``threshold``.
+
+MoCA runtime uses dynamic priority score, which considers SLA target and user-defined priority. MoCA prioritizes applicatino with higher priorities and application with less time margin to the target under contentious environment.
+
+
+MoCA Scheduler [to be continued]
+----------------
+
 
 ### Decoupled Access/Execute
 
